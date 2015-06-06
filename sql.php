@@ -2,7 +2,7 @@
 	
 	function sql_connect($server, $username, $password)
 	{
-		$conn = mysql_connect($server, $username, $password, true);
+		$conn = mysql_connect($server, $username, $password, true) or die(mysql_error());
 		if (!$conn)
 			return NULL;
 		return $conn;
