@@ -3,7 +3,7 @@
 	function sql_connect($server, $username, $password, $db = null)
 	{
 		$conn = mysql_connect($server, $username, $password, true) or die(mysql_error());
-		if ($db != null) sql_select_db($db);
+		if ($db != null) sql_select_db($conn, $db);
 		return $conn;
 	}
 	function sql_disconnect($conn)
@@ -35,7 +35,11 @@
 		$ret = array();
 		$res = mysql_query($query, $conn) or die(mysql_error());
 		while (($row = mysql_fetch_assoc($res)))
+		{
+			//var_dump($row);
 			array_push($ret, $row);
+		}
+		return $ret;
 	}
 	function sql_return($conn, $val)
 	{

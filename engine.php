@@ -3,7 +3,23 @@
 	require_once('sql.php');
 	require_once('sortalgo.php');
 
-	function common_connect() { return sql_connect($SQL_SERVER, $SQL_USER, $SQL_PASS, $SQL_DB); }
+	function do_redirect($loc)
+	{
+		echo("<script>window.location.assign(\"$loc\");</script>");
+	}
+
+	function checklogin() //start a session, return true if logged in, or die/error page
+	{
+		session_start();
+		if (isset($_SESSION['userinfo']))
+			if (isset($_SESSION['userinfo']['uid']))
+				return true;
+		do_redirect("login.php");
+		die("redirect fail, <a href=\"login.php\">Log In</a>");
+		return false; //because why not add this
+	}
+
+	function common_connect() { return sql_connect($GLOBALS['SQL_SERVER'], $GLOBALS['SQL_USER'], $GLOBALS['SQL_PASS'], $GLOBALS['SQL_DB']); }
 
 	function delete_post($uid, $pid)
 	{
@@ -17,13 +33,21 @@
 
 	function create_post($uid, $msg, $pid = 0)
 	{
-		if (strlen($msg) > 256) return false; //message too long
-		if (!isfriendswith($uid, getpostinfo($pid)['uid'])) return false; //not permitted
+		if (strlen($msg) > 256)  {
+			echo("too long");
+			return false; //message too long
+		}
+		if (!isfriendswith($uid, getpostinfo($pid)['uid'])) {
+			echo("not permitted");
+			return false; //not permitted
+		}
 		$conn = common_connect();
 		$posttime = time();
-		sql_query($conn, "INSERT INTO posts('time', 'parent', 'uid', 'text')," .
+		sql_query($conn, "INSERT INTO posts(time, parent, uid, text) " .
 				 		 "VALUES('$posttime', '$pid', '$uid', '$msg');");
-		sql_return($conn, true);
+		sql_disconnect($conn);
+		return true;
+		//sql_return($conn, true);
 		
 	}
 
@@ -53,7 +77,8 @@
 		//NAME => name of friend
 	{
 		$conn = common_connect();
-		$info = sql_dquery($conn, "select friend from friends where owner='$uid';");
+		//die("select * from friends where owner='$uid';");
+		$info = sql_dquery($conn, "select * from friends where owner='$uid';");
 		$ret = array();
 		foreach($info as $row)
 		{
@@ -68,7 +93,9 @@
 			$row = mysql_fetch_assoc($res);
 			$ret[$i]['NAME'] = $row['name'];
 		}
-		return sql_return($conn, $ret);
+		//return sql_return($conn, $ret);
+		sql_disconnect($conn);
+		return $ret;
 	}
 
 	function get_specific_timeline($uid, $pid = 0, $limit = 50) //returns array of posts in the following format:
@@ -76,17 +103,19 @@
 		//UID = creator
 		//TIME = UNIX time of posting
 		//TEXT = message content
+		//NAME = display name of poster
 		//REPLIES = null if no comments, timeline array if comments
 	{
+		$commentlim = $limit / 10;
 		$conn = common_connect();
 		$ret = array();
-		$initquery = "SELECT * FROM posts WHERE uid='$uid' ORDER BY time LIMIT '$limit';";
+		$initquery = "SELECT * FROM posts WHERE uid='$uid' AND parent='0' ORDER BY time ASC LIMIT $limit;";
 		if ($pid > 0)
-			$initquery = "SELECT * FROM posts parent='$pid' ORDER BY time LIMIT '$limit';"; //specify a pid and uid is ignored
+			$initquery = "SELECT * FROM posts WHERE parent='$pid' ORDER BY time DESC LIMIT $commentlim;"; //specify a pid and uid is ignored
 		$res = sql_query($conn, $initquery);
 		while ($row = mysql_fetch_assoc($res))
 		{
-			$res2 = sql_query($conn, "SELECT * FROM users WHERE uid='" + $row['uid'] + "';");
+			$res2 = sql_query($conn, "SELECT * FROM users WHERE uid='" . $row['uid'] . "';");	
 			$inarr = array('PID' => $row['pid'],
 						   'UID' => $row['uid'],
 						   'TIME'=> $row['time'],
@@ -104,7 +133,9 @@
 			if (count($reparr) > 0)
 				$ret[$i]['REPLIES'] = $reparr;
 		}
-		return sql_return($conn, $ret);
+		sql_disconnect($conn);
+		return $ret;
+		//return sql_return($conn, $ret);
 	}
 
 	function get_timeline($uid, $limit = 100) //returns a user's timeline. Follows same format as get_specific_timeline
@@ -118,10 +149,11 @@
 			foreach($tmp as $post)
 				array_push($timeline, $post);
 		}
-		sort_array_asc($timeline, "TIME");
+		usort($timeline, "timeline_cmp");
+		dorecursivesort($timeline);
 		if ($limit == 0) return $timeline;
 		for ($i = 0; $i < $limit; $i++)
-			array_push($ret, $timeline[$i]);
+			array_push($ret, $timeline[count($timeline) - $i]);
 		return $ret;
 	}
 

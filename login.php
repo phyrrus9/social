@@ -1,6 +1,5 @@
 <?php
-	require_once('sql.php');
-	require_once('config.php');
+	require_once('engine.php');
 
 	session_start();
 
@@ -23,12 +22,12 @@
 		default:
 			die("Who's the smart one here...");
 	}
-	echo("<script>window.location.assign(\"index.php\");</script>");
+	do_redirect("index.php");
 
 	function do_login($user, $pass)
 	{
-		$conn = sql_connect($SQL_SERVER, $SQL_USER, $SQL_PASS);
-		sql_select_db($conn, $SQL_DB);
+		//die("got there");
+		$conn = common_connect();
 		$res = sql_query($conn, "SELECT * FROM users WHERE username='$user';");
 		$row = null; //just for keepsake
 		if (!($row = mysql_fetch_assoc($res)))
@@ -52,11 +51,13 @@
 	{
 		?>
 		<form action="login.php" method="POST">
+					  <input type="hidden" name="logininfo" value="1" />
 			Username: <input type="text" name="loginuser" /> 
 			Password: <input type="text" name="loginpass" /> 
-					  <input type="submit" />
+					  <input type="submit" value="Submit" />
 		</form>
 		<?php
+		die("");
 	}
 
 ?>

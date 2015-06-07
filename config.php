@@ -1,9 +1,9 @@
 <?php
 
-	$SQL_SERVER = "localhost";
-	$SQL_USER   = "root";
-	$SQL_PASS   = "alpine";
-	$SQL_DB     = "social";
+	$GLOBALS['SQL_SERVER'] = "localhost";
+	$GLOBALS['SQL_USER']   = "root";
+	$GLOBALS['SQL_PASS']   = "alpine";
+	$GLOBALS['SQL_DB']     = "social"; //fuck this
 
 	/*
 mysql> show tables;                                                                                                                                            

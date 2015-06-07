@@ -1,16 +1,26 @@
 <?php
 
-	require_once('sql.php');
-	require_once('config.php');
+	include('../engine.php');
+	
+
+	$SQL_SERVER = $GLOBALS['SQL_SERVER'];
+	$SQL_USER   = $GLOBALS['SQL_USER'];
+	$SQL_PASS   = $GLOBALS['SQL_PASS'];
+	$SQL_DB     = $GLOBALS['SQL_DB'];
+
+	//if (isset($_GET['action']))
+		create_admin_user("admin", "pass");
 
 	function setup_error($conn = null) { //yes, I use this style when its >1 line && <5 lines
 		if ($conn != null)
 			sql_disconnect($conn);
+		echo("setup error");
 		return false;
 	}
 	function setup_success($conn = null) {
 		if ($conn != null);
 			sql_disconnect($conn);
+		echo("setup success<br />");
 		return true;
 	}
 
@@ -31,7 +41,7 @@
 			$templine .= $line;
 			if (substr(trim($line), -1, 1) == ';') //exec when a ; is hit
 			{
-    			sql_query($conn, $templine) or return setup_error($conn);
+    			sql_query($conn, $templine);
     			$templine = '';
 			}
 		}
@@ -40,8 +50,8 @@
 
 	function create_admin_user($admin_user, $admin_pass) //returns true on success, false on failure
 	{
-		$conn = sql_connect($SQL_SERVER, $SQL_USER, $SQL_PASS);
-		sql_select_db($conn, $SQL_DB);
+		
+		$conn = common_connect();
 		$res = sql_query($conn, "SELECT * FROM users WHERE uid='1';");
 		if (mysql_fetch_assoc($res) != false)
 			return setup_error($conn);
