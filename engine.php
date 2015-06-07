@@ -1,44 +1,61 @@
 <?php
 	require_once('config.php');
 	require_once('sql.php');
-/*
-mysql> describe friends;                                                                                                                                       
-+--------+---------+------+-----+---------+-------+                                                                                                            
-| Field  | Type    | Null | Key | Default | Extra | 
-+--------+---------+------+-----+---------+-------+                                                                                                            
-| owner  | int(11) | NO   |     | NULL    |       | //UID of original                                                                                                            
-| friend | int(11) | NO   |     | NULL    |       | //person he/she is friends with                                                                                                           
-+--------+---------+------+-----+---------+-------+                                                                                                            
-mysql> describe posts;                                                                                                                                         
-+--------+--------------+------+-----+---------+-------+                                                                                                       
-| Field  | Type         | Null | Key | Default | Extra |                                                                                                       
-+--------+--------------+------+-----+---------+-------+                                                                                                       
-| pid    | int(11)      | NO   | PRI | NULL    |       | //post ID (auto generated)                                                                                                    
-| time   | int(11)      | NO   |     | NULL    |       | //time of post (UNIX time)                                                                                                      
-| parent | int(11)      | NO   |     | 0       |       | //parent (nonzero if comment, PID of original post/comment)
-| uid    | int(11)      | NO   |     | NULL    |       | //uid of poster                                                                                                      
-| text   | varchar(255) | NO   |     | NULL    |       | //message contents                                                                                                      
-+--------+--------------+------+-----+---------+-------+                                                                                                                                                                                                                                                                                                                                                                                                
-mysql> describe users;                                                                                                                                         
-+----------+-------------+------+-----+---------+-------+                                                                                                      
-| Field    | Type        | Null | Key | Default | Extra |                                                                                                      
-+----------+-------------+------+-----+---------+-------+                                                                                                      
-| uid      | int(11)     | NO   | PRI | NULL    |       | //user id number (auto generated)                                                                                                     
-| name     | int(11)     | NO   |     | NULL    |       | //user's display name
-| username | varchar(60) | YES  |     | NULL    |       | //user's login ID                                                                                                     
-| password | varchar(72) | YES  |     | NULL    |       | //password_hash($pass, PASSWORD_BCRYPT)
-+-------------------------------------------------------+
-*/
+	require_once('sortalgo.php');
+
+	function common_connect() { return sql_connect($SQL_SERVER, $SQL_USER, $SQL_PASS, $SQL_DB); }
+
+	function delete_post($uid, $pid)
+	{
+		$postinfo = getpostinfo($pid);
+		if ($postinfo == null) return false; //does not exist
+		if ($postinfo['uid'] != $uid and $uid != 1) return false; //not permitted
+		$conn = common_connect();
+		sql_query($conn, "DELETE FROM posts WHERE parent='$pid' OR pid='$pid';");
+		sql_return($conn, true);
+	}
+
+	function create_post($uid, $msg, $pid = 0)
+	{
+		if (strlen($msg) > 256) return false; //message too long
+		if (!isfriendswith($uid, getpostinfo($pid)['uid'])) return false; //not permitted
+		$conn = common_connect();
+		$posttime = time();
+		sql_query($conn, "INSERT INTO posts('time', 'parent', 'uid', 'text')," .
+				 		 "VALUES('$posttime', '$pid', '$uid', '$msg');");
+		sql_return($conn, true);
+		
+	}
+
+	function getpostinfo($pid)
+	{
+		$conn = common_connect();
+		$res = sql_query("SELECT * FROM posts WHERE pid='$pid';") or
+			sql_return($conn, null);
+		sql_return($conn, sql_decode($res));
+	}
+
+	function isfriendswith($uid1, $uid2) //returns true if friends, false if not
+	{
+		if ($uid1 == 1) return true; //admin clause
+		$conn = common_connect();
+		$info = sql_dquery($conn, "SELECT * FROM friends WHERE friend='$uid1';");
+		foreach($info as $row)
+			if ($row['owner'] == $uid2)
+				return sql_return($conn, true);
+		return sql_return($conn, false);
+	}
+
+	function ismutualfriendswith($uid1, $uid2) { return (isfriendswith($uid1, $uid2) and isfriendswith($uid2, $uid1)) or $uid1 == 1; }
 
 	function get_friends($uid) //returns an array of the user's friends (as arrays with the following)
 		//UID => uid of friend
 		//NAME => name of friend
 	{
-		$conn = sql_connect($SQL_SERVER, $SQL_USER, $SQL_PASS);
-		sql_select_db($SQL_DB); //now we are in
-		$res = sql_query($conn, "select friend from friends where owner='$uid';");
+		$conn = common_connect();
+		$info = sql_dquery($conn, "select friend from friends where owner='$uid';");
 		$ret = array();
-		while ($row = mysql_fetch_assoc($res))
+		foreach($info as $row)
 		{
 			$ins = array();
 			$ins['UID'] = $row['friend']; //get the first
@@ -51,8 +68,7 @@ mysql> describe users;
 			$row = mysql_fetch_assoc($res);
 			$ret[$i]['NAME'] = $row['name'];
 		}
-		sql_disconnect($conn);
-		return $ret;
+		return sql_return($conn, $ret);
 	}
 
 	function get_specific_timeline($uid, $pid = 0, $limit = 50) //returns array of posts in the following format:
@@ -62,8 +78,7 @@ mysql> describe users;
 		//TEXT = message content
 		//REPLIES = null if no comments, timeline array if comments
 	{
-		$conn = sql_connect($SQL_SERVER, $SQL_USER, $SQL_PASS);
-		sql_select_db($SQL_DB);
+		$conn = common_connect();
 		$ret = array();
 		$initquery = "SELECT * FROM posts WHERE uid='$uid' ORDER BY time LIMIT '$limit';";
 		if ($pid > 0)
@@ -71,11 +86,14 @@ mysql> describe users;
 		$res = sql_query($conn, $initquery);
 		while ($row = mysql_fetch_assoc($res))
 		{
+			$res2 = sql_query($conn, "SELECT * FROM users WHERE uid='" + $row['uid'] + "';");
 			$inarr = array('PID' => $row['pid'],
 						   'UID' => $row['uid'],
 						   'TIME'=> $row['time'],
-						   'TEXT'=> $row['text']);
-			$inarr = null; //deal with that later
+						   'TEXT'=> $row['text'],
+						   'NAME'=> mysql_fetch_assoc($res2)['name']
+						  );
+			$inarr['REPLIES'] = null; //deal with that later...fun fact...that used to say $inarr = null;
 			array_push($ret, $inarr);
 		}
 		//now, gather the replies
@@ -86,11 +104,25 @@ mysql> describe users;
 			if (count($reparr) > 0)
 				$ret[$i]['REPLIES'] = $reparr;
 		}
-		sql_disconnect($conn);
-		return $ret;
+		return sql_return($conn, $ret);
 	}
-	function get_timeline($uid) //returns a user's timeline. Follows same format as get_specific_timeline
+
+	function get_timeline($uid, $limit = 100) //returns a user's timeline. Follows same format as get_specific_timeline
 	{
 		$friends = get_friends($uid); //get a list of the user's friends
+		$timeline = array();
+		$ret = array();
+		foreach($friends as $friend)
+		{
+			$tmp = get_specific_timeline($friend['UID']);
+			foreach($tmp as $post)
+				array_push($timeline, $post);
+		}
+		sort_array_asc($timeline, "TIME");
+		if ($limit == 0) return $timeline;
+		for ($i = 0; $i < $limit; $i++)
+			array_push($ret, $timeline[$i]);
+		return $ret;
 	}
+
 ?>
