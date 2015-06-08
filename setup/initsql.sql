@@ -8,6 +8,9 @@ CREATE TABLE `friends` (
   `owner` int(11) NOT NULL,
   `friend` int(11) NOT NULL
 );
+ALTER TABLE `friends`
+ADD CONSTRAINT one_friend
+UNIQUE (`owner`, `friend`);
 DROP TABLE IF EXISTS `posts`;
 CREATE TABLE `posts` (
   `pid` int(11) NOT NULL AUTO_INCREMENT,
@@ -15,6 +18,7 @@ CREATE TABLE `posts` (
   `parent` int(11) NOT NULL DEFAULT '0',
   `uid` int(11) NOT NULL,
   `text` varchar(255) NOT NULL,
+  `flag` int(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`pid`)
 );
 DROP TABLE IF EXISTS `users`;

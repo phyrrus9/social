@@ -34,12 +34,144 @@
 			case "editprofile":
 				displayprofileedit();
 				break;
+			case "manageflags":
+				domanageflags();
+				break;
+			case "viewpost":
+				doviewpost();
+				break;
+			case "deletepost":
+				dodeletepost();
+				domanageflags();
+				break;
+			case "unflagpost":
+				dounflag();
+				domanageflags();
+				break;
 			default: break;
 		}
 	}
 
 	function setresultbox($str)
 		{ $_SESSION['ADMIN_RESULT_BOX'] = $str; }
+
+	function getflags()
+	{
+		$ret = array();
+		$conn = common_connect();
+		$res = sql_dquery($conn, "SELECT * FROM posts WHERE flag='1';");
+		foreach($res as $row)
+			array_push($ret, $row);
+		sql_disconnect($conn);
+		return $ret;
+	}
+
+	function doviewpost()
+	{
+		$pid = $_POST['pid'];
+		$timeline = get_specific_timeline(0, $pid, 50, true);
+		$res = "<div class=\"timeline\">" .
+				subtimeline_internal($timeline, true, true) .
+			    "</div>";
+		setresultbox($res);
+	}
+
+	function dodeletepost()
+	{
+		$pid = $_POST['pid'];
+		if (!check_perm(ACCESS_ADMIN_FLAGS) && can_delete($pid))
+		{
+			setresultbox("You are not allowed to delete posts");
+			return;
+		}
+		delete_post($uid, $pid);
+		setresultbox("Post $pid deleted");
+	}
+
+	function dounflag()
+	{
+		if (check_perm(ACCESS_ADMIN_FLAGS))
+		{
+			$pid = $_POST['pid'];
+			$conn = common_connect();
+			sql_query($conn, "UPDATE posts SET flag='0' WHERE pid='$pid';");
+			sql_disconnect($conn);
+			setresultbox("Post $pid unflagged");
+		}
+		else
+			setresultbox("You are not allowed to manage flags");
+	}
+
+	function manageflags()
+	{
+		if (!check_perm(ACCESS_ADMIN_FLAGS)) return;
+		?>
+		<div class="rbox">
+			<form action="admin.php" method="POST" autocomplete="off">
+				<input type="hidden" name="action" value="manageflags" /><br />
+				<input type="submit" value="Manage Flags" />
+			</form>
+		</div>
+		<?php
+	}
+
+
+	function domanageflags()
+	{
+		if (!check_perm(ACCESS_ADMIN_FLAGS)) return;
+		$flags = getflags();
+		if (count($flags) < 1) return;
+		$deldis = "";
+		if (!check_perm(ACCESS_DELETE_ALL))
+			$deldis = "disabled";
+		$ret = "<table border=\"1\">
+				<tr>
+					<th>pid</th>
+					<th>uid</th>
+					<th>username</th>
+					<th>name</th>
+					<th>view</th>
+					<th>delete</th>
+					<th>unflag</th>
+				</tr>";
+		foreach($flags as $flag)
+		{
+			$pid = $flag['pid'];
+			$uid = $flag['uid'];
+			$info = getuserinfo($uid);
+			$uname = $info['user'];
+			$name = $info['name'];
+			$ret .= "<tr>
+						<td>$pid</td>
+						<td>$uid</td>
+						<td>$uname</td>
+						<td>$name</td>
+						<td>
+							<form action=\"admin.php\" method=\"POST\">
+								<input type=\"hidden\" name=\"action\" value=\"viewpost\" />
+								<input type=\"hidden\" name=\"pid\" value=\"$pid\" />
+								<input type=\"submit\" class=\"inlineButton\" value=\"View\" />
+							</form>
+						</td>
+						<td>
+							<form action=\"admin.php\" method=\"POST\">
+								<input type=\"hidden\" name=\"action\" value=\"deletepost\" />
+								<input type=\"hidden\" name=\"pid\" value=\"$pid\" />
+								<input type=\"submit\" class=\"inlineButton\" value=\"Delete\" $deldis />
+							</form>
+						</td>
+						<td>
+							<form action=\"admin.php\" method=\"POST\">
+								<input type=\"hidden\" name=\"action\" value=\"unflagpost\" />
+								<input type=\"hidden\" name=\"pid\" value=\"$pid\" />
+								<input type=\"submit\" class=\"inlineButton\" value=\"Unflag\" />
+							</form>
+						</td>
+					</tr>";
+		}
+		$ret .= "</table>";
+		setresultbox($ret);
+	}
 
 	function adduser()
 	{
@@ -65,19 +197,19 @@
 		$name = $_POST['name'];
 		$pass = password_hash($_POST['password'], PASSWORD_BCRYPT);
 		$conn = common_connect();
-		$res = sql_dquery($conn, "SELECT * FROM users WHERE username='$uname'")[0];
+		$res = sql_dquery($conn, "SELECT * FROM users WHERE username='$uname'");
 		if ($res == null)
 		{
 			sql_query($conn, "INSERT INTO users(username,password,name) VALUES('$uname','$pass','$name');");
 			$res = sql_dquery($conn, "SELECT * FROM users WHERE username='$uname'");
-			var_dump($res);
 			if ($res == null)
 				setresultbox("User $uname was not created!");
 			else
 			{
-				$userid = $res['uid'];
-				sql_query($conn, "INSERT INTO friends(owner,friend) VALUES('$userid','1'),('$userid',$userid');");
-				setresultbox("User $uname(" . $res['uid'] . ") created!");
+				$userid = $res[0]['uid'];
+				$query = "INSERT INTO friends(owner,friend) VALUES('$userid','1'),('$userid','$userid');";
+				sql_query($conn, $query);
+				setresultbox("User $uname($userid) created!");
 			}
 		}
 		else
@@ -134,10 +266,10 @@
 			}
 			$query = "UPDATE users SET username='$uname', name='$name' WHERE uid='$uid';";
 			if ($setpass == true)
-				$query = "UPDATE users SET username='$uname', name='$name', password='$pass'' WHERE uid='$uid';";
+				$query = "UPDATE users SET username='$uname', name='$name', password='$pass' WHERE uid='$uid';";
 			if (strcmp($uname, $info['user']) != 0) //then we have to check it
 			{
-				$res = sql_dquery($conn, "SELECT * FROM users WHERE username='$uname';")[0];
+				$res = sql_dquery($conn, "SELECT * FROM users WHERE username='$uname';");
 				if ($res != null)
 				{
 					sql_disconnect($conn);
@@ -217,6 +349,7 @@
 				case "edit_profile": $access |= ACCESS_ADMIN_EDIT_PROFILE; break;
 				case "edit_level": $access |= ACCESS_ADMIN_EDIT_LEVEL; break;
 				case "delete_users": $access |= ACCESS_ADMIN_DELETE_USERS; break;
+				case "flags": $access |= ACCESS_ADMIN_FLAGS; break;
 				case "sql": $access |= ACCESS_ADMIN_SQL; break;
 				default: break;
 			}
@@ -237,7 +370,7 @@
 			{
 				$conn = common_connect();
 				sql_query($conn, "DELETE FROM users WHERE uid='$uid';");
-				sql_disconnect();
+				sql_disconnect($conn);
 				setresultbox("User #$uid deleted");
 			}
 			else
@@ -283,6 +416,7 @@
 					'edit_profile' => ' ',
 					'edit_level'   => ' ',
 					'delete_users' => ' ',
+					'flags'		   => ' ',
 					'sql'          => ' '
 				);
 		if ($perm & ACCESS_POST)
@@ -305,6 +439,8 @@
 			$access['edit_level'] = 'checked';
 		if ($perm & ACCESS_ADMIN_DELETE_USERS)
 			$access['delete_users'] = 'checked';
+		if ($perm & ACCESS_ADMIN_FLAGS)
+			$access['flags'] = 'checked';
 		if ($perm & ACCESS_ADMIN_SQL)
 			$access['sql'] = 'checked';
 		return $access;
@@ -314,6 +450,7 @@
 	{
 		$ret = "";
 		$access = getpermissionstates_internal($perm);
+		$i = 0;
 		foreach($access as $key => $value)
 		{
 			$tmp_disabled = $disabled;
@@ -321,9 +458,10 @@
 				if (isset($access_enabled[$key]))
 					if (strcmp($access_enabled[$key], "checked") == 0)
 						$tmp_disabled = "";
-			if (strcmp($key, "admin_panel") == 0)
+			if (!strcmp($key, "edit_all") || !strcmp($key, "edit_level"))
 				$ret .= "<br />";
-			$ret .= "[$key <input type=\"checkbox\" name=\"$key\" $value $tmp_disabled />]&nbsp;";
+			$ret .= "[$key<input type=\"checkbox\" name=\"$key\" $value $tmp_disabled />]";
+			$i++;
 		}
 		return $ret;
 	}
@@ -384,7 +522,7 @@
 
 	function sqlquery()
 	{
-		if (!check_perm(ACCESS_ADMIN_SQL)) retrun;
+		if (!check_perm(ACCESS_ADMIN_SQL)) return;
 		?>
 		<div class="rbox">
 			SQL Query<br />
@@ -395,14 +533,6 @@
 			</form>
 		</div>
 		<?php
-	}
-
-	function svar_dump($var)
-	{
-		ob_start();
-		var_dump($var);
-		$result = ob_get_clean();
-		return $result;
 	}
 
 	function dosqlquery($recursed = 0, $initial = "")
@@ -435,7 +565,6 @@
 		$conn = common_connect();
 		$res = sql_dquery($conn, $query);
 		sql_disconnect($conn);
-		$keys = array_keys($res[0]);
 		$ret .= "<table border=\"1\"><tr>";
 		if ($res == null)
 		{
@@ -443,6 +572,7 @@
 		}
 		else
 		{
+			$keys = array_keys($res[0]);
 			foreach($keys as $key)
 				$ret .= "<th>$key</th>";
 			$ret .= "</tr>";
@@ -451,7 +581,7 @@
 				$ret .= "<tr>";
 				$values = array_values($arr);
 				foreach($values as $value)
-					$ret .= "<td>$value</td>";
+					$ret .= "<td>".htmlspecialchars($value)."</td>";
 				$ret .= "</tr>";
 			}
 		}
@@ -485,7 +615,7 @@
 </div><br />
 </header>
 <div class="admin">
-	<center><?php adduser(); searchusers(); sqlquery(); ?></center><br />
+	<center><?php adduser(); searchusers(); sqlquery(); manageflags(); ?></center><br />
 	<br />
 	<br />
 	<center><?php resultbox(); ?></center>

@@ -21,7 +21,7 @@ body
 	background-repeat: no-repeat;
     background-attachment: fixed;
     background-position: center;
-	overflow-x: hidden !important;
+	overflow-x: hidden;
 }
 
 header
@@ -36,7 +36,6 @@ header
 
 .timeline
 {
-	/*background-color: whitesmoke;*/
 	width: 60%;
 	margin-left: auto;
 	margin-right: auto;
@@ -47,7 +46,7 @@ header
 
 .timeline ul
 {
-	width: 90%; /*this is just a basic idea*/
+	width: 90%;
 	list-style-type: none;
 }
 
@@ -74,6 +73,11 @@ header
 	background: rgba(255, 255, 255, 0.8);
 }
 
+.inlineForm
+{
+	display: inline;
+}
+
 .timeline .inlineButton
 {
 	background-color: transparent;
@@ -92,6 +96,23 @@ header
 	width: auto;
 	display: block;
 	background: rgba(255, 255, 255, 0.8);
+}
+
+.timeline .rbox_highlight
+{
+    border-radius: 15px;
+    border: 1px solid #FF0000;
+    padding: 5px;
+	margin-top: 5px;
+	width: auto;
+	display: block;
+	background: rgba(255, 255, 255, 0.8);
+}
+
+.timeline .rbox .message
+{
+	text-align: left;
+	display: block;
 }
 
 .newPostButton
@@ -120,10 +141,38 @@ header
 	font-size: 12px;
 }
 
+.admin td
+{
+	word-wrap: break-word;
+	max-width: 420px;
+}
+
 .admin .inlineButton
 {
-	/*background-color: transparent;*/
 	border: none;
-	/*color: blue;*/
 	cursor: pointer;
 }
+
+.user .rbox
+{
+    border-radius: 25px;
+    border: 2px solid #8AC007;
+    padding: 15px;
+	width: auto;
+	display: inline-block;
+	background: rgba(255, 255, 255, 0.8);
+}
+
+.user .inlineButton
+{
+	margin-top: 10px;
+	border: none;
+	cursor: pointer;
+}
+
+.user tr
+{
+	font-family: courier;
+	font-size: 12px;
+}
+

@@ -4,6 +4,33 @@
 	require_once('sortalgo.php');
 	require_once('permissions.php');
 
+	function ispostflagged($pid)
+	{
+		$conn = common_connect();
+		$res = sql_dquery($conn, "SELECT * FROM posts WHERE pid='$pid';")[0];
+		if ($res['flag'] == 1)
+			return true;
+		sql_disconnect($conn);
+		return false;
+	}
+
+	function br2nl($string)
+	{ return preg_replace('/\<br(\s*)?\/?\>/i', "", $string); } 
+
+	function getuidbyusername($name)
+	{
+		$conn = common_connect();
+		$row = sql_dquery($conn, "SELECT * FROM users WHERE username='$name';");
+		if ($row == null) return null;
+		$ret = array(
+				'uid'  => $row[0]['uid'],
+				'user' => $row[0]['username'],
+				'name' => $row[0]['name'],
+				'level'=> $row[0]['permission']
+			);
+		return $ret['uid'];
+	}
+
 	function getuserinfo($uid)
 	{
 		$conn = common_connect();
@@ -50,6 +77,7 @@
 
 	function create_post($uid, $msg, $pid = 0)
 	{
+		$msg = nl2br($msg);
 		if (strlen($msg) > 256)  {
 			echo("too long");
 			return false; //message too long
@@ -78,15 +106,17 @@
 		return $ret[0];
 	}
 
-	function isfriendswith($uid) //returns true if friends, false if not
+	function isfriendswith($uid, $me = null) //returns true if friends, false if not
 	{
-		if ($_SESSION['userinfo']['uid'] == 1) return true; //admin clause
+		if ($me == null)
+			$me = $_SESSION['userinfo']['uid'];
+		if ($me == 1) return true; //admin clause
 		$conn = common_connect();
 		$query = "SELECT * FROM friends WHERE owner='$uid';";
 		$info = sql_dquery($conn, $query);
 		foreach($info as $row)
 		{
-			if ($row['friend'] == $_SESSION['userinfo']['uid'])
+			if ($row['friend'] == $me)
 			{
 				sql_disconnect($conn);
 				return true;
@@ -96,9 +126,34 @@
 		return false;
 	}
 
-	function ismutualfriendswith($uid1, $uid2) { return (isfriendswith($uid1, $uid2) and isfriendswith($uid2, $uid1)) or $uid1 == 1; }
+	function ismutualfriendswith($uid1, $uid2)
+		{ return isfriendswith($uid1, $uid2) and isfriendswith($uid2, $uid1); }
 
-	function get_friends($uid) //returns an array of the user's friends (as arrays with the following)
+	function get_friend_requests($uid)
+	{
+		$conn = common_connect();
+		$info = sql_dquery($conn, "select * from friends where owner!='$uid' and friend='$uid';");
+		$ret = array();
+		foreach($info as $row)
+		{
+			$ins = array();
+			$ins['UID'] = $row['owner'];
+			if (isfriendswith($uid, $ins['UID']))
+				continue;
+			array_push($ret, $ins);
+		}
+		for ($i = 0; $i < count($ret); $i = $i + 1)
+		{
+			$get_uid = $ret[$i]['UID'];
+			$res = sql_query($conn, "SELECT name FROM users WHERE uid='$get_uid';");
+			$row = mysql_fetch_assoc($res);
+			$ret[$i]['NAME'] = $row['name'];
+		}
+		sql_disconnect($conn);
+		return $ret;
+	}
+
+	function get_friends($uid, $mutual = true) //returns an array of the user's friends (as arrays with the following)
 		//UID => uid of friend
 		//NAME => name of friend
 	{
@@ -110,6 +165,8 @@
 		{
 			$ins = array();
 			$ins['UID'] = $row['friend']; //get the first
+			if ($mutual == false and ismutualfriendswith($uid, $ins['UID']))
+					continue;
 			array_push($ret, $ins);
 		}
 		for ($i = 0; $i < count($ret); $i = $i + 1)
@@ -124,7 +181,7 @@
 		return $ret;
 	}
 
-	function get_specific_timeline($uid, $pid = 0, $limit = 50) //returns array of posts in the following format:
+	function get_specific_timeline($uid, $pid = 0, $limit = 50, $include = false) //returns array of posts in the following format:
 		//PID = post id
 		//UID = creator
 		//TIME = UNIX time of posting
@@ -136,8 +193,10 @@
 		$conn = common_connect();
 		$ret = array();
 		$initquery = "SELECT * FROM posts WHERE uid='$uid' AND parent='0' ORDER BY time DESC LIMIT $limit;";
-		if ($pid > 0)
+		if ($pid > 0 and $include == false)
 			$initquery = "SELECT * FROM posts WHERE parent='$pid' ORDER BY time DESC LIMIT $commentlim;"; //specify a pid and uid is ignored
+		else if ($pid > 0)
+			$initquery = "SELECT * FROM posts WHERE parent='$pid' or pid='$pid' ORDER BY time DESC LIMIT $commentlim;";
 		$res = sql_query($conn, $initquery);
 		while ($row = mysql_fetch_assoc($res))
 		{

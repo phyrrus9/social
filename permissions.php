@@ -22,7 +22,8 @@
 	define("ACCESS_ADMIN_EDIT_PROFILE",0x0400);
 	define("ACCESS_ADMIN_EDIT_LEVEL",  0x0800);
 	define("ACCESS_ADMIN_DELETE_USERS",0x1000);
-	define("ACCESS_ADMIN_SQL",         0x2000);
+	define("ACCESS_ADMIN_FLAGS",       0x2000);
+	define("ACCESS_ADMIN_SQL",         0x8000);
 
 	function check_perm($perm) { return getuserinfo($_SESSION['userinfo']['uid'])['level'] & $perm; }
 
@@ -55,8 +56,8 @@
 
 	function can_post($pid)
 	{
-		if ($_SESSION['userinfo']['level'] & ACCESS_POST_ALL) return true;
-		if ($_SESSION['userinfo']['level'] & ACCESS_POST)
+		if (check_perm(ACCESS_POST_ALL)) return true;
+		if (check_perm(ACCESS_POST))
 		{
 			if ($pid == 0) return true;
 			$postinfo = getpostinfo($pid);
@@ -68,7 +69,7 @@
 
 	function can_delete($pid)
 	{
-		if ($_SESSION['userinfo']['level'] & ACCESS_DELETE_ALL) return true;
+		if (check_perm(ACCESS_DELETE_ALL)) return true;
 		$postinfo = getpostinfo($pid);
 		if ($postinfo['uid'] == $_SESSION['userinfo']['uid']) return true;
 		return false;
@@ -76,10 +77,9 @@
 
 	function can_edit($pid)
 	{
-		if ($_SESSION['userinfo']['level'] & ACCESS_EDIT_ALL) return true;
+		if (check_perm(ACCESS_EDIT_ALL)) return true;
 		$postinfo = getpostinfo($pid);
-		return ($postinfo['uid'] == $_SESSION['userinfo']['uid'] && 
-		        $_SESSION['userinfo']['level'] & ACCESS_EDIT_OWN);
+		return ($postinfo['uid'] == $_SESSION['userinfo']['uid'] && check_perm(ACCESS_EDIT_OWN));
 	}
 
 ?>

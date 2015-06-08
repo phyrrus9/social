@@ -13,7 +13,7 @@
 	function sql_select_db($conn, $db)
 	{
 		$query = "USE " . $db;
-		$res = mysql_query($query, $conn);
+		$res = mysql_query($query, $conn) or die(mysql_error());
 	}
 	function sql_query($conn, $query)
 	{
@@ -34,6 +34,8 @@
 	{
 		$ret = array();
 		$res = mysql_query($query, $conn) or die(mysql_error());
+		if (strcmp(gettype($res), "boolean") == 0)
+			return null;
 		while (($row = mysql_fetch_assoc($res)))
 			array_push($ret, $row);
 		return $ret;
@@ -41,7 +43,7 @@
 	function sql_return($conn, $val)
 	{
 		sql_disconnect($conn);
-		return val;
+		return $val;
 	}
 
 ?>

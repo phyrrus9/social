@@ -11,6 +11,7 @@
 	echo("<header><div class=\"left\">Timeline</div>" .
 		 "<div class=\"right\">");
 	printpostbutton($_SESSION['userinfo']['uid']);
+	printuserlink();
 	printadminlink();
 	printlogoutlink();
 	echo("</div><br /></header><body>");
