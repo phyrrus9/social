@@ -1,11 +1,48 @@
+a
+{
+	background-color: transparent;
+	border: none;
+	color: blue;
+	cursor: pointer;
+	text-decoration: none;
+	font-family: courier;
+	font-size: 12px;
+}
+
+a:visited
+{
+	color: blue;
+}
+
+body
+{
+	width: 100%;
+	background-image: url('./wallhaven-random/wallhaven_random.php');
+	background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+	overflow-x: hidden !important;
+}
+
+header
+{
+	background: rgba(255, 255, 255, 0.85);
+	border-radius: 15px;
+	padding-left: 10px;
+	padding-right: 10px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
 .timeline
 {
-	background-color: whitesmoke;
+	/*background-color: whitesmoke;*/
 	width: 60%;
 	margin-left: auto;
 	margin-right: auto;
 	font-family: courier;
 	font-size: 12px;
+	background: rgba(255, 255, 255, 0.1);
 }
 
 .timeline ul
@@ -14,7 +51,30 @@
 	list-style-type: none;
 }
 
-.timeline .commentButton
+.left
+{
+	float: left;
+	text-align: left;
+}
+
+.right
+{
+	float: right;
+	text-align: right;
+}
+
+.alone_rbox
+{
+    border-radius: 25px;
+    border: 1px solid #8AC007;
+    padding: 7px;
+	margin-top: 5px;
+	width: auto;
+	display: inline-block;
+	background: rgba(255, 255, 255, 0.8);
+}
+
+.timeline .inlineButton
 {
 	background-color: transparent;
 	border: none;
@@ -23,10 +83,47 @@
 	font-size: 11px;
 }
 
+.timeline .rbox
+{
+    border-radius: 15px;
+    border: 1px solid #8AC007;
+    padding: 5px;
+	margin-top: 5px;
+	width: auto;
+	display: block;
+	background: rgba(255, 255, 255, 0.8);
+}
+
 .newPostButton
 {
 	background-color: transparent;
 	border: none;
 	color: blue;
+	cursor: pointer;
+	font-family: courier;
+	font-size: 12px;
+}
+
+.admin .rbox
+{
+    border-radius: 25px;
+    border: 2px solid #8AC007;
+    padding: 15px;
+	width: auto;
+	display: inline-block;
+	background: rgba(255, 255, 255, 0.8);
+}
+
+.admin tr
+{
+	font-family: courier;
+	font-size: 12px;
+}
+
+.admin .inlineButton
+{
+	/*background-color: transparent;*/
+	border: none;
+	/*color: blue;*/
 	cursor: pointer;
 }

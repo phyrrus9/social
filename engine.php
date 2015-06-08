@@ -2,6 +2,20 @@
 	require_once('config.php');
 	require_once('sql.php');
 	require_once('sortalgo.php');
+	require_once('permissions.php');
+
+	function getuserinfo($uid)
+	{
+		$conn = common_connect();
+		$row = sql_dquery($conn, "SELECT * FROM users WHERE uid='$uid';")[0];
+		$ret = array(
+				'uid'  => $row['uid'],
+				'user' => $row['username'],
+				'name' => $row['name'],
+				'level'=> $row['permission']
+			);
+		return $ret;
+	}
 
 	function do_redirect($loc)
 	{
@@ -27,8 +41,11 @@
 		if ($postinfo == null) return false; //does not exist
 		if ($postinfo['uid'] != $uid and $uid != 1) return false; //not permitted
 		$conn = common_connect();
-		sql_query($conn, "DELETE FROM posts WHERE parent='$pid' OR pid='$pid';");
-		sql_return($conn, true);
+		$children = sql_dquery($conn, "SELECT * FROM posts WHERE parent='$pid';");
+		foreach($children as $child)
+			delete_post(1, $child['pid']); //keep things clean
+		sql_query($conn, "DELETE FROM posts WHERE pid='$pid';");
+		return sql_return($conn, true);
 	}
 
 	function create_post($uid, $msg, $pid = 0)
@@ -54,20 +71,29 @@
 	function getpostinfo($pid)
 	{
 		$conn = common_connect();
-		$res = sql_query("SELECT * FROM posts WHERE pid='$pid';") or
-			sql_return($conn, null);
-		sql_return($conn, sql_decode($res));
+		$ret = sql_dquery($conn, "SELECT * FROM posts WHERE pid='$pid';");
+		sql_disconnect($conn);
+		if ($ret == null)
+			return null;
+		return $ret[0];
 	}
 
-	function isfriendswith($uid1, $uid2) //returns true if friends, false if not
+	function isfriendswith($uid) //returns true if friends, false if not
 	{
-		if ($uid1 == 1) return true; //admin clause
+		if ($_SESSION['userinfo']['uid'] == 1) return true; //admin clause
 		$conn = common_connect();
-		$info = sql_dquery($conn, "SELECT * FROM friends WHERE friend='$uid1';");
+		$query = "SELECT * FROM friends WHERE owner='$uid';";
+		$info = sql_dquery($conn, $query);
 		foreach($info as $row)
-			if ($row['owner'] == $uid2)
-				return sql_return($conn, true);
-		return sql_return($conn, false);
+		{
+			if ($row['friend'] == $_SESSION['userinfo']['uid'])
+			{
+				sql_disconnect($conn);
+				return true;
+			}
+		}
+		sql_disconnect($conn);
+		return false;
 	}
 
 	function ismutualfriendswith($uid1, $uid2) { return (isfriendswith($uid1, $uid2) and isfriendswith($uid2, $uid1)) or $uid1 == 1; }
@@ -109,7 +135,7 @@
 		$commentlim = $limit / 10;
 		$conn = common_connect();
 		$ret = array();
-		$initquery = "SELECT * FROM posts WHERE uid='$uid' AND parent='0' ORDER BY time ASC LIMIT $limit;";
+		$initquery = "SELECT * FROM posts WHERE uid='$uid' AND parent='0' ORDER BY time DESC LIMIT $limit;";
 		if ($pid > 0)
 			$initquery = "SELECT * FROM posts WHERE parent='$pid' ORDER BY time DESC LIMIT $commentlim;"; //specify a pid and uid is ignored
 		$res = sql_query($conn, $initquery);
@@ -153,7 +179,11 @@
 		dorecursivesort($timeline);
 		if ($limit == 0) return $timeline;
 		for ($i = 0; $i < $limit; $i++)
-			array_push($ret, $timeline[count($timeline) - $i]);
+		{
+			$ind = count($timeline) - $i - 1;
+			if ($ind < 0) continue;
+			array_push($ret, $timeline[$ind]);
+		}
 		return $ret;
 	}
 

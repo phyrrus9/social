@@ -58,7 +58,8 @@
 		$_admin_pass = password_hash($admin_pass, PASSWORD_BCRYPT);
 		$_admin_user = $admin_user;
 		$_admin_name = "Administrator";
-		sql_query($conn, "INSERT INTO users(username, name, password) VALUES('$_admin_user', '$_admin_name', '$_admin_pass');");
+		sql_query($conn, "INSERT INTO users(username, name, password, permission)" .
+				         "VALUES('$_admin_user', '$_admin_name', '$_admin_pass', '65535');");
 		$res2 = sql_query($conn, "SELECT * FROM users WHERE username='$_admin_user';");
 		$row = mysql_fetch_assoc($res2);
 		var_dump($row);

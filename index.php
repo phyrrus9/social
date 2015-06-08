@@ -1,21 +1,21 @@
 <html>
-
-	<link rel="stylesheet" href="style.css" />
-	
+	<head>
+		<link rel="stylesheet" href="style.css" />
+		<title>Timeline</title>
+	</head>
 <?php
 
 	require_once('engine.php');
 	require_once('ioengine.php');
 	checklogin();
-?>
-	<form action="io.php" method="POST">
-		<input type="hidden" name="action" value="createcomment" />
-		<input type="hidden" name="commentpid" value="0" />
-		<input type="submit" class="newPostButton" value="New Post" style="display: inline;" />
-	</form>
-<?php
+	echo("<header><div class=\"left\">Timeline</div>" .
+		 "<div class=\"right\">");
+	printpostbutton($_SESSION['userinfo']['uid']);
+	printadminlink();
+	printlogoutlink();
+	echo("</div><br /></header><body>");
 	display_timeline($_SESSION['userinfo']['uid']);
 
 ?>
-	
+	</body>
 </html>

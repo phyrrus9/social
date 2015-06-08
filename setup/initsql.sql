@@ -23,6 +23,7 @@ CREATE TABLE `users` (
   `name` varchar(50) NOT NULL,
   `username` varchar(60) NOT NULL,
   `password` varchar(72) NOT NULL,
+  `permission` int(11) NOT NULL DEFAULT '1',
   PRIMARY KEY (`uid`),
   UNIQUE KEY `username` (`username`)
 );

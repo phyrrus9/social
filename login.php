@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="style.css" />
 <?php
 	require_once('engine.php');
 
@@ -38,10 +39,7 @@
 		sql_disconnect($conn);
 		if (password_verify($pass, $row['password']))
 		{
-			$_SESSION['userinfo'] = array(
-				'uid'  => $row['uid'],
-				'user' => $row['username'],
-				'name' => $row['name']);
+			$_SESSION['userinfo'] = getuserinfo($row['uid']);
 			return true;
 		}
 		return false;
@@ -50,12 +48,14 @@
 	function showlogin()
 	{
 		?>
-		<form action="login.php" method="POST">
-					  <input type="hidden" name="logininfo" value="1" />
-			Username: <input type="text" name="loginuser" /> 
-			Password: <input type="text" name="loginpass" /> 
-					  <input type="submit" value="Submit" />
-		</form>
+		<header>
+			<form action="login.php" method="POST">
+						  <input type="hidden" name="logininfo" value="1" />
+				Username: <input type="text" name="loginuser" /> 
+				Password: <input type="text" name="loginpass" /> 
+						  <input type="submit" value="Submit" />
+			</form>
+		</header>
 		<?php
 		die("");
 	}
