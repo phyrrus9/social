@@ -14,7 +14,7 @@
 	{
 		?>
 		<div class="timeline">
-			<?php subtimeline(get_timeline($uid)); ?>
+			<?php subtimeline(get_timeline($uid, check_perm(ACCESS_ADMIN_FLAGS))); ?>
 		</div>
 		<?php
 	}

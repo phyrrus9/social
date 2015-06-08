@@ -4,6 +4,7 @@
 	$GLOBALS['SQL_USER']   = "root";
 	$GLOBALS['SQL_PASS']   = "alpine";
 	$GLOBALS['SQL_DB']     = "social"; //fuck this
+	define("SOCIAL_VERSION", "v0.1.1");
 
 	/*
 mysql> show tables;                                                                                                                                            

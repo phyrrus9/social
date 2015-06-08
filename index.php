@@ -9,7 +9,9 @@
 	require_once('ioengine.php');
 	checklogin();
 	echo("<header><div class=\"left\">Timeline</div>" .
-		 "<div class=\"right\">");
+		 "<div class=\"right\">
+		 " . $_SESSION['userinfo']['name']
+		 . "&nbsp;&nbsp;|&nbsp;");
 	printpostbutton($_SESSION['userinfo']['uid']);
 	printuserlink();
 	printadminlink();

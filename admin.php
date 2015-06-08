@@ -79,6 +79,7 @@
 	function dodeletepost()
 	{
 		$pid = $_POST['pid'];
+		$uid = $_SESSION['userinfo']['uid']; //fixed UID bug from v0.1
 		if (!check_perm(ACCESS_ADMIN_FLAGS) && can_delete($pid))
 		{
 			setresultbox("You are not allowed to delete posts");
