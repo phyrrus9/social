@@ -1,9 +1,15 @@
 <?php
 
-	$GLOBALS['SQL_SERVER'] = "localhost";
+
+	/*$GLOBALS['SQL_SERVER'] = "localhost";
 	$GLOBALS['SQL_USER']   = "root";
 	$GLOBALS['SQL_PASS']   = "alpine";
 	$GLOBALS['SQL_DB']     = "social"; //fuck this
+	*/
+	$GLOBALS['SQL_SERVER'] = "sql4.freemysqlhosting.net";
+    $GLOBALS['SQL_USER']   = "sql480073";
+    $GLOBALS['SQL_PASS']   = "nH1!jB9%";
+    $GLOBALS['SQL_DB']     = "sql480073";
 	define("SOCIAL_VERSION", "v0.1.1");
 
 	/*
