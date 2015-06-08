@@ -1,52 +1,37 @@
 <?php
 
 
-	/*$GLOBALS['SQL_SERVER'] = "localhost";
+	$GLOBALS['SQL_SERVER'] = "localhost";
 	$GLOBALS['SQL_USER']   = "root";
 	$GLOBALS['SQL_PASS']   = "alpine";
 	$GLOBALS['SQL_DB']     = "social"; //fuck this
-	*/
-	$GLOBALS['SQL_SERVER'] = "sql4.freemysqlhosting.net";
-    $GLOBALS['SQL_USER']   = "sql480073";
-    $GLOBALS['SQL_PASS']   = "nH1!jB9%";
-    $GLOBALS['SQL_DB']     = "sql480073";
-	define("SOCIAL_VERSION", "v0.1.1");
-
-	/*
-mysql> show tables;                                                                                                                                            
-+------------------+                                                                                                                                           
-| Tables_in_social |                                                                                                                                           
-+------------------+                                                                                                                                           
-| friends          |                                                                                                                                           
-| posts            |                                                                                                                                           
-| users            |                                                                                                                                           
-+------------------+ 
-mysql> describe friends;                                                                                                                                       
-+--------+---------+------+-----+---------+-------+                                                                                                            
-| Field  | Type    | Null | Key | Default | Extra |                                                                                                            
-+--------+---------+------+-----+---------+-------+                                                                                                            
-| owner  | int(11) | NO   |     | NULL    |       | //UID of original                                                                                                            
-| friend | int(11) | NO   |     | NULL    |       | //person he/she is friends with                                                                                                           
-+--------+---------+------+-----+---------+-------+                                                                                                            
-mysql> describe posts;                                                                                                                                         
-+--------+--------------+------+-----+---------+-------+                                                                                                       
-| Field  | Type         | Null | Key | Default | Extra |                                                                                                       
-+--------+--------------+------+-----+---------+-------+                                                                                                       
-| pid    | int(11)      | NO   | PRI | NULL    |       | //post ID (auto generated)                                                                                                    
-| time   | int(11)      | NO   |     | NULL    |       | //time of post (UNIX time)                                                                                                      
-| parent | int(11)      | NO   |     | 0       |       | //parent (nonzero if comment, PID of original post/comment)                                                                                                      
-| uid    | int(11)      | NO   |     | NULL    |       | //uid of poster                                                                                                      
-| text   | varchar(255) | NO   |     | NULL    |       | //message contents                                                                                                      
-+--------+--------------+------+-----+---------+-------+                                                                                                                                                                                                                                                                                                                                                                                                
-mysql> describe users;                                                                                                                                         
-+----------+-------------+------+-----+---------+-------+                                                                                                      
-| Field    | Type        | Null | Key | Default | Extra |                                                                                                      
-+----------+-------------+------+-----+---------+-------+                                                                                                      
-| uid      | int(11)     | NO   | PRI | NULL    |       | //user id number (auto generated)                                                                                                     
-| name     | int(11)     | NO   |     | NULL    |       | //user's display name
-| username | varchar(60) | YES  |     | NULL    |       | //user's login ID                                                                                                     
-| password | varchar(72) | YES  |     | NULL    |       | //password_hash($pass, PASSWORD_BCRYPT)                                                                                                     
-+----------+-------------+------+-----+---------+-------+
-	*/
+	
+	$GLOBALS['SETTINGS'] =
+		array(
+				'NAME' => 'rabba',
+				'BASE' => 'http://preview.ybh2576qtexko6r5gk605lwsqlx47vi5b9mqd5aw8my4x6r.box.codeanywhere.com',
+				'VERSION' => 'v0.2',
+				'ADMIN'=>
+					array(
+						'NAME' => 'Ethan Laur',
+						'EMAIL'=> 'phyrrus9@gmail.com'
+					),
+				'DEFAULTS'=>
+					array(
+						'ACCESS' => 1,
+						'DISPLAY_NAME' => 'New User'
+					),
+				'OPTIONS'=>
+					array(
+						'ALLOW_USER_REGISTRATION' => false,
+						'DYNAMIC_WALLPAPER_CHANGE'=> false
+					)
+			);
+	function GET_SETTING($key)
+		{ return $GLOBALS['SETTINGS'][$key]; }
+	function GET_DEFAULT($key)
+		{ return GET_SETTING('DEFAULTS')[$key]; }
+	function GET_OPTION($key)
+		{ return GET_SETTING('OPTIONS')[$key]; }
 
 ?>

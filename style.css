@@ -17,10 +17,11 @@ a:visited
 body
 {
 	width: 100%;
-	background-image: url('./wallhaven_random.php');
+	background-image: url('./wallhaven-random/wallhaven_random.php?res=1024x768');
 	background-repeat: no-repeat;
     background-attachment: fixed;
     background-position: center;
+	background-size: cover;
 	overflow-x: hidden;
 }
 
@@ -32,13 +33,51 @@ header
 	padding-right: 10px;
 	margin-left: auto;
 	margin-right: auto;
+	position: fixed;
+	top: 0;
+	width: 99%;
+}
+
+footer
+{
+	background: rgba(255, 255, 255, 0.85);
+	border-radius: 15px;
+	padding-left: 10px;
+	padding-right: 10px;
+	margin-left: auto;
+	margin-right: auto;
+	position: fixed;
+	bottom: 0;
+	width: 99%;
+}
+
+.genericcontent
+{
+	border-radius: 25px;
+	width: 75%;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 50px;
+	
+	padding-bottom: 5px;
+	font-family: courier;
+	font-size: 12px;
+	background: rgba(255, 255, 255, 0.75);
+}
+
+.genericcontent p
+{
+	width: 75%;
 }
 
 .timeline
 {
 	width: 60%;
+	border-radius: 5px;
 	margin-left: auto;
 	margin-right: auto;
+	padding-top: 20px;
+	padding-bottom: 5px;
 	font-family: courier;
 	font-size: 12px;
 	background: rgba(255, 255, 255, 0.1);
@@ -75,7 +114,13 @@ header
 
 .inlineForm
 {
-	display: inline;
+	display: inline-block;
+}
+
+.inlineButton
+{
+	border: none;
+	cursor: pointer;
 }
 
 .timeline .inlineButton
@@ -123,6 +168,11 @@ header
 	cursor: pointer;
 	font-family: courier;
 	font-size: 12px;
+}
+
+.admin
+{
+	padding-top: 30px;
 }
 
 .admin .rbox

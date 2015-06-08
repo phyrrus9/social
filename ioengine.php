@@ -14,20 +14,21 @@
 	{
 		?>
 		<div class="timeline">
-			<?php subtimeline(get_timeline($uid, check_perm(ACCESS_ADMIN_FLAGS))); ?>
+			<?php subtimeline(get_timeline($uid), check_perm(ACCESS_ADMIN_FLAGS)); ?>
 		</div>
 		<?php
 	}
 
-	function subtimeline($timeline)
-		{ echo subtimeline_internal($timeline); }
+	function subtimeline($timeline, $h = false, $s = false)
+		{ echo subtimeline_internal($timeline, $h, $s); }
 
 	function subtimeline_internal($timeline, $highlightflagged = false, $silent = false)
 		//responsible for formatting the timeline for the user to see
 		//format for timeline array:
 	{
 		$ret = "";
-		date_default_timezone_set($_SESSION['userinfo']['timezone']);
+		if (strlen($_SESSION['userinfo']['timezone']) >= 3)
+			date_default_timezone_set($_SESSION['userinfo']['timezone']);
 		$ret .= "<ul>";
 		foreach($timeline as $thread)
 		{
@@ -55,7 +56,7 @@
 					</div>
 				</li>";
 			if ($thread['REPLIES'] != NULL)
-				$ret .= subtimeline_internal($thread['REPLIES']); //gotta love mixed-language recursion
+				$ret .= subtimeline_internal($thread['REPLIES'], $highlightflagged, $silent); //gotta love mixed-language recursion
 		}
 		$ret .= "</ul>";
 		return $ret;
@@ -86,7 +87,7 @@
 		<?php if ($pid > 0) { ?>
 		<div class="timeline">
 			<?php
-			$timeline = get_specific_timeline(0, $pid);
+			$timeline = get_specific_timeline(0, $pid, 40, true);
 			subtimeline($timeline);
 			?>	
 		</div> <?php } ?>
@@ -139,6 +140,7 @@
 			<input type=\"hidden\" name=\"action\" value=\"editpost\" />
 			<input type=\"hidden\" name=\"postpid\" value=\"$pid\"/>
 			<input type=\"hidden\" name=\"silent\" value=\"$silentstr\" />
+			<input type=\"hidden\" name=\"unflag\" value=\"false\" />
 			<input type=\"submit\" class=\"inlineButton\" value=\"Edit\" />
 		</form>
 		";
@@ -159,12 +161,14 @@
 	function printeditform($pid)
 	{
 		$silent = $_POST['silent'];
+		$unflag = $_POST['unflag'];
 		?>
 		<div class="alone_rbox">
 		<form action="io.php" method="POST">
 			<input type="hidden" name="action" value="publishedit" />
 			<input type="hidden" name="postpid" value=<?php echo("\"$pid\""); ?> />
 			<input type="hidden" name="silent" value=<?php echo("\"$silent\"") ?> />
+			<input type="hidden" name="unflag" value=<?php echo("\"$unflag\"") ?> />
 			<textarea rows="4" cols="50" name="postmsg"><?php echo(br2nl(getpostinfo($pid)['text'])); ?></textarea>
 			<input type="submit" />
 		</form>

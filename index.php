@@ -8,6 +8,7 @@
 	require_once('engine.php');
 	require_once('ioengine.php');
 	checklogin();
+	changewallpaper();
 	echo("<header><div class=\"left\">Timeline</div>" .
 		 "<div class=\"right\">
 		 " . $_SESSION['userinfo']['name']
@@ -21,4 +22,7 @@
 
 ?>
 	</body>
+	<footer>
+		testing footer
+	</footer>
 </html>

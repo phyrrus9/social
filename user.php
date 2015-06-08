@@ -7,7 +7,7 @@
 	require_once('engine.php');
 	require_once('ioengine.php');
 	checklogin();
-
+	changewallpaper();
 	if (isset($_POST['action']))
 	{
 		switch ($_POST['action'])

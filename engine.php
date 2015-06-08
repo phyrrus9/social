@@ -4,10 +4,12 @@
 	require_once('sortalgo.php');
 	require_once('permissions.php');
 
+	changewallpaper();
+
 	function ispostflagged($pid)
 	{
 		$conn = common_connect();
-		$res = sql_dquery($conn, "SELECT * FROM posts WHERE pid='$pid';")[0];
+		$res = sql_decode(sql_query($conn, "SELECT * FROM posts WHERE pid='$pid';"));
 		if ($res['flag'] == 1)
 			return true;
 		sql_disconnect($conn);
@@ -51,7 +53,8 @@
 
 	function checklogin() //start a session, return true if logged in, or die/error page
 	{
-		session_start();
+		if (!isset($_SESSION))
+			session_start();
 		if (isset($_SESSION['userinfo']))
 			if (isset($_SESSION['userinfo']['uid']))
 				return true;
@@ -193,10 +196,8 @@
 		$conn = common_connect();
 		$ret = array();
 		$initquery = "SELECT * FROM posts WHERE uid='$uid' AND parent='0' ORDER BY time DESC LIMIT $limit;";
-		if ($pid > 0 and $include == false)
+		if ($pid > 0)
 			$initquery = "SELECT * FROM posts WHERE parent='$pid' ORDER BY time DESC LIMIT $commentlim;"; //specify a pid and uid is ignored
-		else if ($pid > 0)
-			$initquery = "SELECT * FROM posts WHERE parent='$pid' or pid='$pid' ORDER BY time DESC LIMIT $commentlim;";
 		$res = sql_query($conn, $initquery);
 		while ($row = mysql_fetch_assoc($res))
 		{
@@ -218,6 +219,20 @@
 			if (count($reparr) > 0)
 				$ret[$i]['REPLIES'] = $reparr;
 		}
+		if ($include)
+		{
+			$row = sql_decode(sql_query($conn, "SELECT * FROM posts WHERE pid='$pid';"));
+			$name = getuserinfo($row['uid'])['name'];
+			$parent = array('PID' => $row['pid'],
+						    'UID' => $row['uid'],
+						    'TIME'=> $row['time'],
+						    'TEXT'=> $row['text'],
+						    'NAME'=> $name
+						   );
+			$parent['REPLIES'] = $ret;
+			sql_disconnect($conn);
+			return array($parent);
+		}
 		sql_disconnect($conn);
 		return $ret;
 		//return sql_return($conn, $ret);
@@ -234,16 +249,39 @@
 			foreach($tmp as $post)
 				array_push($timeline, $post);
 		}
-		usort($timeline, "timeline_cmp");
 		dorecursivesort($timeline);
 		if ($limit == 0) return $timeline;
-		for ($i = 0; $i < $limit; $i++)
+		$size = count($timeline);
+		for ($i = 0; $i < $limit and $i < $size; $i++)
 		{
-			$ind = count($timeline) - $i - 1;
-			if ($ind < 0) continue;
-			array_push($ret, $timeline[$ind]);
+			array_push($ret, $timeline[$i]);
 		}
 		return $ret;
 	}
 
+	function changewallpaper()
+	{
+		if (!GET_OPTION('DYNAMIC_WALLPAPER_CHANGE'))
+			return 0;
+		if (!isset($_SESSION))
+			session_start();
+		if (isset($_SESSION['changewall']))
+			if (strcmp($_SESSION ['changewall'], $_SERVER['REQUEST_URI']) != 0)
+				dochangewallpaper();
+		$_SESSION ['changewall'] = $_SERVER['REQUEST_URI'];
+	}
+
 ?>
+<?php
+	function dochangewallpaper() {
+?>
+<!-- make the background images interesting -->
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+<script>
+	function setbackground(){
+		$('body').css('background-image', 'url(wallhaven-random/wallhaven_random.php)');
+	}
+	$(document).ready(setbackground);
+</script>
+<?php } ?>
+
