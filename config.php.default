@@ -4,17 +4,17 @@
 	$GLOBALS['SQL_SERVER'] = "localhost";
 	$GLOBALS['SQL_USER']   = "root";
 	$GLOBALS['SQL_PASS']   = "alpine";
-	$GLOBALS['SQL_DB']     = "social"; //fuck this
+	$GLOBALS['SQL_DB']     = "social";
 	
 	$GLOBALS['SETTINGS'] =
 		array(
-				'NAME' => 'rabba',
-				'BASE' => 'http://preview.ybh2576qtexko6r5gk605lwsqlx47vi5b9mqd5aw8my4x6r.box.codeanywhere.com',
-				'VERSION' => 'v0.2',
+				'NAME' => 'Site Name',
+				'BASE' => 'Site Base URL',
+				'VERSION' => 'v0.2.1',
 				'ADMIN'=>
 					array(
-						'NAME' => 'Ethan Laur',
-						'EMAIL'=> 'phyrrus9@gmail.com'
+						'NAME' => 'Administrator Name',
+						'EMAIL'=> 'Administrator Email'
 					),
 				'DEFAULTS'=>
 					array(

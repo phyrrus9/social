@@ -14,10 +14,7 @@
 
 	$operation = "LOGIN";
 	if (isset($_POST['action']))
-	{
-		var_dump($_POST);
 		$operation = $_POST['action'];
-	}
 	else if (isset($_SESSION['userinfo']))
 		$operation = "LOGOUT";
 

@@ -1,0 +1,20 @@
+Installing the social script is not exactly a user-oriented task.
+Here are instructions as of now to install it.
+
+STEP 1:
+Create a mySQL database and paste the file
+./setup/initsql.sql into a query and run it
+this will set up the database structure for you
+
+STEP 2:
+Rename config.php.default to config.php
+Edit config.php to suit your needs
+
+STEP 3:
+Visit SERVER_ROOT/setup/engine.php and verify
+that it has written the array to the screen.
+If you do not know PHP, this will look strange
+
+STEP 4:
+Test your new installation and delete the setup
+directory.

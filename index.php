@@ -23,6 +23,9 @@
 ?>
 	</body>
 	<footer>
-		testing footer
+		<?php
+		echo(GET_SETTING('SITE_NAME') . " " . GET_SETTING('VERSION') . " ");
+		echo("Managed by " . GET_SETTING('ADMIN')['NAME'] . "(" . GET_SETTING('ADMIN')['EMAIL'] . ")");
+		?>
 	</footer>
 </html>

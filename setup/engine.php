@@ -69,6 +69,7 @@
 			sql_query($conn, "DELETE FROM users WHERE uid='$id';");
 			return setup_error($conn);
 		}
+		sql_query($conn, "INSERT INTO friends(owner, friend) VALUES('1', '1');");
 		return setup_success($conn);
 	}
 
